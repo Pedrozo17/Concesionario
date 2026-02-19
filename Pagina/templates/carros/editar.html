@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>editar auto</title>
+    </head>
+
+<body>
+<h2>Editar carro</h2>
+
+<form method="POST">
+    {% csrf_token %}
+
+    Marca:<br>
+    <input type="text" name="marca" value="{{ carro.marca }}"><br><br>
+
+    Modelo:<br>
+    <input type="text" name="modelo" value="{{ carro.modelo }}"><br><br>
+
+    Precio:<br>
+    <input type="number" name="precio" value="{{ carro.precio }}"><br><br>
+
+    <button type="submit">Actualizar</button>
+</form>
+
+<br>
+<a href="{% url 'ver_carro' carro.id %}">Cancelar</a>
+
+</body>
+</html>

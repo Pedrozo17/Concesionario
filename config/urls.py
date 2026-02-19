@@ -20,5 +20,5 @@ import Pagina
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include (Pagina.urls))
+    path('', include ('Pagina.urls'))
 ]
