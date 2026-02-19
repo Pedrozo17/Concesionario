@@ -1,96 +1,97 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import HttpResponseForbidden
-from firebase_admin import firestore, auth
+from firebase_admin import firestore
 from config.firebase_connection import initialize_firebase
-from functools import wraps 
-import requests
-import os
-# Create your views here.
+from django.shortcuts import redirect
+from django.contrib import messages
+from functools import wraps
 
 db = initialize_firebase()
 
-def registro_usuario(request):
-    mensaje = None
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        try:
-            # Vamos a crear en Firebase auth
-            user = auth.create_user(
-                email = email,
-                password = password
-            )
+'''
 
-            #CREAR EN FIRESTORE
+def login_required_firebase(view_func):
+    """
+    Decorador que verifica si el usuario inició sesión usando Firebase.
+    Si no existe 'uid' en la sesión, lo redirige al login.
+    """
 
-            db.collection('perfiles').document(user.uid).set({
-                'email': email,
-                'uid': user.uid,
-                'fecha_registro': firestore.SERVER_TIMESTAMP
-            })
-
-            mensaje = f"Usuario registrado correctamente con UID: {user.uid}"
-            return redirect('login')
-        except Exception as e:
-            mensaje = f"☢️Error: {e}"
-    return render(request, 'registro.html', {'mensaje': mensaje})
-
-    #Logica para inicio de sesion
     @wraps(view_func)
-    def _wrapped_view(request, *args, **kwards):
-        if 'uid' not in request.session:
-            messages.warning(request, "☢️Warning, no has iniciado sesión.")
-            return redirect('login')
-        return view_func(request, *args, **kwards)
-    return _wrapped_view
+    def _wrapped_view(request, *args, **kwargs):
 
-def iniciar_sesion(request):
+        if 'uid' not in request.session:
+            messages.warning(request, "Debes iniciar sesión primero.")
+            return redirect('login')   # cambia 'login' si tu url se llama distinto
+
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+'''
+
+def dashboard(request):
+    return render(request, 'dashboard.html')
+
+
+# @login_required_firebase
+def crear_carro(request):
+    if request.method == 'POST':
+        marca = request.POST.get('marca')
+        modelo = request.POST.get('modelo')
+        precio = request.POST.get('precio')
+
+        db.collection('carros').add({
+            'marca': marca,
+            'modelo': modelo,
+            'precio': precio,
+            'fecha': firestore.SERVER_TIMESTAMP
+        })
+
+        messages.success(request, "Carro creado correctamente")
+        return redirect('dashboard')
+
+    return render(request, 'carros/crear.html')
+
+
+# @login_required_firebase
+def ver_carro(request, carro_id):
+    doc = db.collection('carros').document(carro_id).get()
+
+    if not doc.exists:
+        messages.error(request, "Carro no existe")
+        return redirect('dashboard')
+
+    carro = doc.to_dict()
+    carro['id'] = doc.id
+
+    return render(request, 'carros/ver.html', {'carro': carro})
+
+
+# @login_required_firebase
+def editar_carro(request, carro_id):
+    ref = db.collection('carros').document(carro_id)
+    doc = ref.get()
+
+    if not doc.exists:
+        messages.error(request, "Carro no existe")
+        return redirect('dashboard')
+
+    carro = doc.to_dict()
+    carro['id'] = doc.id
 
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        api_key = os.getenv('FIREBASE_API_KEY')
-        #Endpoint oficial de google
-        url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
+        ref.update({
+            'marca': request.POST.get('marca'),
+            'modelo': request.POST.get('modelo'),
+            'precio': request.POST.get('precio'),
+        })
+        messages.success(request, "Carro actualizado")
+        return redirect('ver_carro', carro_id=carro_id)
 
-        payload = {
-            "email": email,
-            "password": password,
-            "returnSecureToken": True
-        }
-        try:
-            response = requests.post(url, json=payload)
-            data = response.json()
+    return render(request, 'carros/editar.html', {'carro': carro})
 
-            if response.status_code == 200:
-                #Todo fue bien
-                request.session['uid'] = data['localId']
-                request.session['email'] = data['email']
-                request.session['idToken'] = data['idToken']
-                messages.success(request, f"✅Acceso correcto al sistema.")
-            else:
-                #Error: analizar el error
-                error_message = data.get('error', {}).get('message', 'UNKNOWN_ERROR')
 
-                errores_comunes = {
-                     'INVALID_LOGIN_CREDENTIALS': 'La contraseña es incorrecta o el correo no es válido.',
-                    'EMAIL_NOT_FOUND': 'Este correo no está registrado en el sistema.',
-                    'USER_DISABLED': 'Esta cuenta ha sido inhabilitada por el administrador.',
-                    'TOO_MANY_ATTEMPTS_TRY_LATER': 'Demasiados intentos fallidos. Espere unos minutos.'
-                }
-
-                mensaje_usuario = errores_comunes.get(error_message, 'Error de autenticación, revisa tus credenciales.')
-                messages.error(request, mensaje_usuario)
-        except requests.exceptions.RequestException as e:
-            messages.error(request, "Error de conexión con el servidor")
-        except Exception as e:
-            messages.error(request, f"Error inesperado: {str(e)}")
-    return render(request, 'login.html')
-
-def cerrar_sesion(request):
-#Limpiar la sesion y luego se redirije
-    request.session.flush()
-    messages.info(request, "Has cerrado sesión correctamente.")
-    return redirect('login.html')
-    
+# @login_required_firebase
+def eliminar_carro(request, carro_id):
+    db.collection('carros').document(carro_id).delete()
+    messages.success(request, "Carro eliminado")
+    return redirect('dashboard')
