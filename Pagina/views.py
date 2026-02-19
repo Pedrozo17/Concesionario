@@ -12,7 +12,7 @@ db = initialize_firebase()
 
 
 
-'''
+
 
 def login_required_firebase(view_func):
     """
@@ -30,13 +30,30 @@ def login_required_firebase(view_func):
         return view_func(request, *args, **kwargs)
 
     return _wrapped_view
-'''
 
+db = initialize_firebase()
+
+@login_required_firebase
 def dashboard(request):
-    return render(request, 'dashboard.html')
+    carros_ref = db.collection('carros')
+    docs = carros_ref.stream()
+
+    carros = []
+
+    for doc in docs:
+        carro = doc.to_dict()
+        carro['id'] = doc.id  # importante para usar carro.id en el template
+        carros.append(carro)
+
+    context = {
+        'carros': carros
+    }
+
+    return render(request, 'dashboard.html', context)
 
 
-# @login_required_firebase
+
+@login_required_firebase
 def crear_carro(request):
     if request.method == 'POST':
         marca = request.POST.get('marca')
@@ -56,7 +73,7 @@ def crear_carro(request):
     return render(request, 'carros/crear.html')
 
 
-# @login_required_firebase
+@login_required_firebase
 def ver_carro(request, carro_id):
     doc = db.collection('carros').document(carro_id).get()
 
@@ -70,7 +87,7 @@ def ver_carro(request, carro_id):
     return render(request, 'carros/ver.html', {'carro': carro})
 
 
-# @login_required_firebase
+@login_required_firebase
 def editar_carro(request, carro_id):
     ref = db.collection('carros').document(carro_id)
     doc = ref.get()
@@ -94,7 +111,7 @@ def editar_carro(request, carro_id):
     return render(request, 'carros/editar.html', {'carro': carro})
 
 
-# @login_required_firebase
+@login_required_firebase
 def eliminar_carro(request, carro_id):
     db.collection('carros').document(carro_id).delete()
     messages.success(request, "Carro eliminado")
@@ -115,7 +132,7 @@ def registro_usuario(request):
 
             #CREAR EN FIRESTORE
 
-            db.collection('perfiles').document(user.uid).set({
+            db.collection('usuarios').document(user.uid).set({
                 'email': email,
                 'uid': user.uid,
                 'fecha_registro': firestore.SERVER_TIMESTAMP
@@ -126,15 +143,6 @@ def registro_usuario(request):
         except Exception as e:
             mensaje = f"☢️Error: {e}"
     return render(request, 'registro.html', {'mensaje': mensaje})
-
-    #Logica para inicio de sesion
-    @wraps(view_func)
-    def _wrapped_view(request, *args, **kwards):
-        if 'uid' not in request.session:
-            messages.warning(request, "☢️Warning, no has iniciado sesión.")
-            return redirect('login')
-        return view_func(request, *args, **kwards)
-    return _wrapped_view
 
 def iniciar_sesion(request):
 
@@ -160,6 +168,7 @@ def iniciar_sesion(request):
                 request.session['email'] = data['email']
                 request.session['idToken'] = data['idToken']
                 messages.success(request, f"✅Acceso correcto al sistema.")
+                return redirect('dashboard')
             else:
                 #Error: analizar el error
                 error_message = data.get('error', {}).get('message', 'UNKNOWN_ERROR')
@@ -179,6 +188,7 @@ def iniciar_sesion(request):
             messages.error(request, f"Error inesperado: {str(e)}")
     return render(request, 'login.html')
 
+@login_required_firebase
 def cerrar_sesion(request):
 #Limpiar la sesion y luego se redirije
     request.session.flush()

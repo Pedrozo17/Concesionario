@@ -4,9 +4,7 @@ urlpatterns = [
     path('registro/', views.registro_usuario, name='registro'),
     path('login/', views.iniciar_sesion, name='login'),
     path('logout/', views.cerrar_sesion, name='logout'),
-
-    path('', views.dashboard, name='dashboard'),
-    path('dashboard/', views.dashboard),
+    path('dashboard/', views.dashboard, name='dashboard'),
 
     path('carros/crear/', views.crear_carro, name='crear_carro'),
     path('carros/<str:carro_id>/', views.ver_carro, name='ver_carro'),

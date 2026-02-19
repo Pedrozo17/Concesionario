@@ -82,8 +82,8 @@
     <div class="form-container">
         <h2>Registro</h2>
 
-        <form method="POST"> # Agregar el token CSRF para seguridad
-            {% csrf_token %} # Agregar los campos de correo electrónico y contraseña
+        <form method="POST">  
+            {% csrf_token %} 
 
             <label for="email">Correo electrónico</label><br>
             <input type="email" name="email" id="email" placeholder="Correo electrónico" required>
