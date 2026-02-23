@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro</title>
+
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1c1c1c, #2b2b2b);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -16,25 +17,25 @@
         }
 
         .form-container {
-            background: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            width: 350px;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 14px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            width: 380px;
             text-align: center;
         }
 
         .form-container h2 {
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 24px;
+            margin-bottom: 25px;
+            color: #1c1c1c;
+            font-weight: 700;
         }
 
         label {
             display: block;
             text-align: left;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 6px;
+            font-weight: 600;
             color: #444;
         }
 
@@ -42,63 +43,60 @@
         input[type="password"] {
             width: 100%;
             padding: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             border: 1px solid #ccc;
             border-radius: 8px;
-            outline: none;
-            transition: border-color 0.3s;
+            transition: all 0.3s ease;
         }
 
-        input[type="email"]:focus,
-        input[type="password"]:focus {
-            border-color: #6c63ff;
-            box-shadow: 0 0 5px rgba(108,99,255,0.5);
+        input:focus {
+            border-color: #d4af37;
+            box-shadow: 0 0 8px rgba(212,175,55,0.4);
         }
 
         button {
             width: 100%;
             padding: 12px;
-            background: #6c63ff;
+            background: #1c1c1c;
             color: #fff;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
+            font-weight: 600;
+            transition: 0.3s;
         }
 
         button:hover {
-            background: #574b90;
+            background: #d4af37;
+            color: #1c1c1c;
         }
 
         p {
             margin-top: 15px;
-            color: #28a745;
-            font-weight: bold;
+            font-weight: 600;
+            color: #2e7d32;
         }
     </style>
 </head>
+
 <body>
     <div class="form-container">
-        <h2>Registro</h2>
+        <h2>Registrate</h2>
 
-        <form method="POST">  
-            {% csrf_token %} 
+        <form method="POST">
+            {% csrf_token %}
 
-            <label for="email">Correo electrónico</label><br>
+            <label for="email">Correo electrónico</label>
             <input type="email" name="email" id="email" placeholder="Correo electrónico" required>
-            <br><br>
 
-            <label for="password">Contraseña</label><br>
+            <label for="password">Contraseña</label>
             <input type="password" name="password" id="password" placeholder="Contraseña" required>
-            <br><br>
 
             <button type="submit">Registrarse</button>
         </form>
 
-        {% if mensaje %} # Mostrar el mensaje de éxito o error después del registro
+        {% if mensaje %}
             <p>{{ mensaje }}</p>
-        {% endif %} # Mostrar el mensaje de éxito o error después del registro
+        {% endif %}
     </div>
 </body>
 </html>

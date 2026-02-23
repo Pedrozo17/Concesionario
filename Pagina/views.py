@@ -14,7 +14,6 @@ db = initialize_firebase()
 
 
 
-
 def login_required_firebase(view_func):
     """
     Decorador que verifica si el usuario inició sesión usando Firebase.
