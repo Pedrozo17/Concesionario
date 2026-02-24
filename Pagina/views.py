@@ -35,6 +35,7 @@ db = initialize_firebase()
 
 @login_required_firebase
 def dashboard(request):
+    print("Sesion en dashboard:", request.session.items())
     carros_ref = db.collection('carros')
     docs = carros_ref.stream()
 
@@ -146,10 +147,10 @@ def registro_usuario(request):
 
 def iniciar_sesion(request):
 
-    if request.method == 'POST':
+    if request.method == 'GET':
         email = request.POST.get('email')
         password = request.POST.get('password')
-        api_key = os.getenv('FIREBASE_API_KEY')
+        api_key = os.getenv('FIREBASE_WEB_API_KEY')
         #Endpoint oficial de google
         url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
 
@@ -161,27 +162,9 @@ def iniciar_sesion(request):
         try:
             response = requests.post(url, json=payload)
             data = response.json()
-
-            if response.status_code == 200:
-                #Todo fue bien
-                request.session['uid'] = data['localId']
-                request.session['email'] = data['email']
-                request.session['idToken'] = data['idToken']
-                messages.success(request, f"✅Acceso correcto al sistema.")
-                return redirect('dashboard')
-            else:
-                #Error: analizar el error
-                error_message = data.get('error', {}).get('message', 'UNKNOWN_ERROR')
-
-                errores_comunes = {
-                     'INVALID_LOGIN_CREDENTIALS': 'La contraseña es incorrecta o el correo no es válido.',
-                    'EMAIL_NOT_FOUND': 'Este correo no está registrado en el sistema.',
-                    'USER_DISABLED': 'Esta cuenta ha sido inhabilitada por el administrador.',
-                    'TOO_MANY_ATTEMPTS_TRY_LATER': 'Demasiados intentos fallidos. Espere unos minutos.'
-                }
-
-                mensaje_usuario = errores_comunes.get(error_message, 'Error de autenticación, revisa tus credenciales.')
-                messages.error(request, mensaje_usuario)
+            print("STATUS CODE:", response.status_code)
+            print("RESPONSE DATA:", data)
+            
         except requests.exceptions.RequestException as e:
             messages.error(request, "Error de conexión con el servidor")
         except Exception as e:
@@ -193,4 +176,4 @@ def cerrar_sesion(request):
 #Limpiar la sesion y luego se redirije
     request.session.flush()
     messages.info(request, "Has cerrado sesión correctamente.")
-    return redirect('login.html')
+    return redirect('login')
